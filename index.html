@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>SmartBin Scanner</title>
+
+  <!-- โหลดไลบรารี -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+</head>
+
+<body style="text-align:center; font-family:sans-serif;">
+  <h2>SmartBin Plastic Scanner</h2>
+  <p id="status">กดปุ่มเพื่อเริ่มสแกน</p>
+
+  <button onclick="init()" style="padding:12px 20px; font-size:18px;">
+    📷 Start Camera
+  </button>
+
+  <div id="webcam-container" style="margin-top:20px;"></div>
+  <div id="label-container" style="font-size:22px; margin-top:20px;"></div>
+
+<script>
+const URL = "https://teachablemachine.withgoogle.com/models/EV-mbCqpx/";
+
+let model, webcam, labelContainer, maxPredictions;
+
+async function init() {
+  try {
+    document.getElementById("status").innerText = "⏳ Loading model...";
+
+    model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+    maxPredictions = model.getTotalClasses();
+
+    document.getElementById("status").innerText = "📷 Requesting camera...";
+
+    webcam = new tmImage.Webcam(300, 300, true);
+    await webcam.setup();
+    await webcam.play();
+    window.requestAnimationFrame(loop);
+
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+    labelContainer = document.getElementById("label-container");
+
+    document.getElementById("status").innerText = "✅ Camera Ready";
+
+  } catch (err) {
+    document.getElementById("status").innerText = "❌ ERROR: " + err.message;
+  }
+}
+
+async function loop() {
+  webcam.update();
+  await predict();
+  window.requestAnimationFrame(loop);
+}
+
+async function predict() {
+  const prediction = await model.predict(webcam.canvas);
+
+  // หา class ที่เปอร์เซ็นต์สูงสุด
+  let highest = prediction.reduce((a, b) => a.probability > b.probability ? a : b);
+
+  labelContainer.innerHTML =
+    "Detected: <b>" + highest.className + "</b><br>" +
+    "Confidence: " + (highest.probability * 100).toFixed(1) + "%";
+}
+</script>
+</body>
+</html>
