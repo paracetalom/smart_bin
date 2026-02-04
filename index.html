@@ -47,8 +47,11 @@ async function startWebcam() {
     document.getElementById("webcam-container").innerHTML = "";
   }
   
+  // กำหนด flip: true สำหรับกล้องหน้า, false สำหรับกล้องหลัง
+  const flip = facingMode === "user";
+  
   // สร้าง webcam ใหม่ด้วย facingMode ปัจจุบัน
-  webcam = new tmImage.Webcam(300, 300, true);
+  webcam = new tmImage.Webcam(300, 300, flip);
   await webcam.setup({ facingMode: facingMode });
   await webcam.play();
   
