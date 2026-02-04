@@ -13,7 +13,7 @@
   <p id="status">กดเริ่มเพื่อเปิดกล้อง</p>
 
   <button onclick="init()">📷 Start Camera</button>
-  <button onclick="flipCamera()">🔄 Switch Camera</button>
+  <button onclick="switchCamera()">🔄 Switch Front/Back</button>
 
   <div id="webcam-container" style="margin-top:20px;"></div>
   <div id="label-container" style="font-size:22px; margin-top:20px;"></div>
@@ -22,7 +22,7 @@
 const URL = "https://teachablemachine.withgoogle.com/models/EV-mbCqpx/";
 
 let model, webcam, labelContainer, maxPredictions;
-let facingMode = true; // true = หน้า, false = หลัง
+let facingMode = "environment"; // เริ่มที่กล้องหลัง
 
 async function init() {
   try {
@@ -39,26 +39,31 @@ async function init() {
 }
 
 async function startCamera() {
-  document.getElementById("status").innerText = "Requesting camera...";
-
   if (webcam) {
     webcam.stop();
     document.getElementById("webcam-container").innerHTML = "";
   }
 
-  webcam = new tmImage.Webcam(300, 300, facingMode);
-  await webcam.setup();
+  document.getElementById("status").innerText = "Opening camera...";
+
+  const constraints = {
+    video: { facingMode: { exact: facingMode } },
+    audio: false
+  };
+
+  webcam = new tmImage.Webcam(300, 300, false);
+  await webcam.setup(constraints);
   await webcam.play();
 
-  document.getElementById("status").innerText = "Camera Ready";
-
-  window.requestAnimationFrame(loop);
   document.getElementById("webcam-container").appendChild(webcam.canvas);
   labelContainer = document.getElementById("label-container");
+
+  document.getElementById("status").innerText = "Camera Ready";
+  window.requestAnimationFrame(loop);
 }
 
-function flipCamera() {
-  facingMode = !facingMode; // สลับ true/false
+function switchCamera() {
+  facingMode = (facingMode === "environment") ? "user" : "environment";
   startCamera();
 }
 
